@@ -2,6 +2,8 @@
 
 Automated attendance check-out system for BOM BADO (`https://bom.bado.vn`) built with **Playwright**, **Page Object Model (POM)**, and **100% pure XPath locators**.
 
+👉 **[Xem tài liệu hướng dẫn chi tiết bằng Tiếng Việt tại đây (README_VI.md)](README_VI.md)**
+
 ---
 
 ## 🛡️ Ironclad 6-Layer Safety Shield
