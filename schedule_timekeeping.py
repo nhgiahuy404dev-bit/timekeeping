@@ -17,7 +17,7 @@ from data import LOGIN_ACCOUNT, PASSWORD
 from model.page.timekeeping_page import TimekeepingPage
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug.log")
-handlers = [logging.FileHandler(LOG_FILE, encoding="utf-8")]
+handlers = [logging.FileHandler(LOG_FILE, mode="w", encoding="utf-8")]
 if "--show-log" in sys.argv or "--verbose" in sys.argv:
     handlers.append(logging.StreamHandler(sys.stdout))
 

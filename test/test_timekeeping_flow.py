@@ -21,7 +21,8 @@ from model.page.timekeeping_page import TimekeepingPage
 # Cấu hình logging: Ghi toàn bộ dữ liệu chi tiết vào file debug.log
 # Mặc định KHÔNG in định dạng debug.log ra terminal để màn hình sạch đẹp
 LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "debug.log")
-handlers = [logging.FileHandler(LOG_FILE, encoding="utf-8")]
+# mode="w" đảm bảo xóa sạch log cũ của lần chạy trước, luôn bắt đầu với file log mới
+handlers = [logging.FileHandler(LOG_FILE, mode="w", encoding="utf-8")]
 
 # Chỉ bật StreamHandler nếu người dùng truyền cờ --show-log hoặc --verbose
 if "--show-log" in sys.argv or "--verbose" in sys.argv:

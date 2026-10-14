@@ -21,13 +21,14 @@ from data import LOGIN_ACCOUNT
 from model.page.timekeeping_page import TimekeepingPage
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug.log")
+handlers = [logging.FileHandler(LOG_FILE, mode="w", encoding="utf-8")]
+if "--show-log" in sys.argv or "--verbose" in sys.argv:
+    handlers.append(logging.StreamHandler(sys.stdout))
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(LOG_FILE, encoding="utf-8")
-    ]
+    handlers=handlers
 )
 logger = logging.getLogger("InspectLocators")
 

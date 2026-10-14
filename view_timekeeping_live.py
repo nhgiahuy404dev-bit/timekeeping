@@ -21,7 +21,7 @@ from model.page.timekeeping_page import TimekeepingPage
 AUTOMATION_PROFILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "automation_profile")
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug.log")
-handlers = [logging.FileHandler(LOG_FILE, encoding="utf-8")]
+handlers = [logging.FileHandler(LOG_FILE, mode="w", encoding="utf-8")]
 if "--show-log" in sys.argv or "--verbose" in sys.argv:
     handlers.append(logging.StreamHandler(sys.stdout))
 
