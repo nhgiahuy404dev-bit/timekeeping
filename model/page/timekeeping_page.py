@@ -69,23 +69,35 @@ class TimekeepingPage(BasePage):
                     google_btn.click()
                 popup = popup_info.value
                 logger.info("Cửa sổ Google popup đã mở.")
+
+                # Chờ popup chuyển hướng từ Firebase sang Google Accounts
+                try:
+                    popup.wait_for_url(lambda u: "google.com" in u, timeout=15000)
+                    logger.info(f"Popup đã tải trang Google: {popup.url}")
+                except Exception:
+                    pass
                 popup.wait_for_load_state("domcontentloaded")
-                popup.wait_for_timeout(2000)
+                popup.wait_for_timeout(1500)
 
                 # Bước 1: Kiểm tra màn hình Chọn tài khoản (Choose an account)
                 account_xpath = LoginLocator.get_google_account_xpath(username)
                 account_el = popup.locator(account_xpath).first
                 account_selected = False
-                if account_el.is_visible(timeout=4000):
+                if account_el.is_visible(timeout=8000):
                     logger.info(f"Phát hiện tài khoản {username} trong danh sách Choose an account. Đang click chọn...")
-                    account_el.click()
+                    try:
+                        account_el.click()
+                    except Exception:
+                        account_el.click(force=True)
                     account_selected = True
                     popup.wait_for_timeout(2000)
+                else:
+                    logger.info("Không thấy tài khoản trong danh sách Choose an account, kiểm tra ô nhập Email...")
 
                 # Bước 2: Nếu chưa chọn tài khoản từ danh sách, kiểm tra ô nhập Email
                 if not account_selected:
                     email_input = popup.locator(LoginLocator.GOOGLE_EMAIL_INPUT).first
-                    if email_input.is_visible(timeout=3000):
+                    if email_input.is_visible(timeout=4000):
                         logger.info(f"Điền email: {username}")
                         email_input.fill(username)
                         popup.wait_for_timeout(500)
@@ -102,7 +114,7 @@ class TimekeepingPage(BasePage):
                 # Bước 3: Áp dụng cho cả 2 trường hợp (tài khoản 'Signed out' cần mật khẩu hoặc sau khi điền email)
                 pass_input = popup.locator(LoginLocator.GOOGLE_PASSWORD_INPUT).first
                 try:
-                    pass_input.wait_for(state="visible", timeout=8000)
+                    pass_input.wait_for(state="visible", timeout=12000)
                     logger.info("Phát hiện ô nhập mật khẩu Google. Đang điền mật khẩu...")
                     pass_input.fill(password)
                     popup.wait_for_timeout(500)

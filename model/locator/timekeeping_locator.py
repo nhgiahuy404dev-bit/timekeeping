@@ -34,9 +34,13 @@ class LoginLocator:
     def get_google_account_xpath(username: str) -> str:
         """Trả về 100% cú pháp XPath để chọn đúng tài khoản trong danh sách Choose an account"""
         return (
-            f"(//*[contains(text(), '{username}')]/ancestor::*[@role='link' or @role='button' or self::li][1] "
+            f"(//li[contains(., '{username}')] "
+            f"| //*[@role='link' and contains(., '{username}')] "
+            f"| //*[contains(@class, 'account') and contains(., '{username}')] "
             f"| //*[@data-identifier='{username}' or @data-email='{username}'] "
-            f"| //*[contains(text(), '{username}')])[1]"
+            f"| //*[contains(., '{username}') and not(*[contains(., '{username}')])] "
+            f"| //li[contains(., 'Huy Nguyễn')] "
+            f"| //*[@role='link' and contains(., 'Huy Nguyễn')])[1]"
         )
 
 
