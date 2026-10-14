@@ -48,9 +48,9 @@ Toàn bộ Locator trong dự án chỉ sử dụng duy nhất mã **XPath**:
 d:/Workspace/timekeeping/
 ├── data/
 │   ├── __init__.py
-│   ├── credentials.py            # Lưu thông tin tài khoản đăng nhập
-│   └── pass.py                   # Alias kết nối credentials
+│   └── credentials.py            # Lưu thông tin tài khoản đăng nhập
 ├── url/
+│   ├── __init__.py
 │   └── timekeeping_page.py       # Cấu hình URL, Chrome Path, giờ hẹn 17:45
 ├── model/
 │   ├── locator/
@@ -61,9 +61,14 @@ d:/Workspace/timekeeping/
 │       ├── base_page.py           # BasePage với Playwright utils
 │       └── timekeeping_page.py    # POM xử lý trang chấm công với khóa an toàn
 ├── test/
-│   └── test_locators.py           # Unit tests kiểm thử cú pháp XPath và khóa dry-run
+│   ├── test_locators.py           # Unit tests kiểm thử cú pháp XPath và khóa dry-run
+│   └── test_timekeeping_flow.py   # Test Flow điều hướng tới trang chấm công rồi dừng
 ├── view_timekeeping_live.py       # Mở trực quan có giao diện để quan sát (Không click)
 ├── schedule_timekeeping.py        # Hẹn giờ chạy tự động lúc 17:45
+├── inspect_locators.py            # Quét và trích xuất Locator
+├── run.sh                         # Script điều khiển menu trên Linux/macOS/Git Bash
+├── run.bat                        # Script điều khiển menu trên Windows CMD
+├── Makefile                       # Makefile chạy lệnh nhanh
 └── README.md
 ```
 
