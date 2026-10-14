@@ -97,12 +97,16 @@ def test_flow_to_timekeeping_page():
                 ui_print("🔑 [2/4] Hệ thống yêu cầu đăng nhập. Đang xử lý đăng nhập Google...")
                 timekeeping_page.login(LOGIN_ACCOUNT, PASSWORD, CHAM_CONG_DIRECT_URL)
 
-                ui_print("⏳ Đang chờ hoàn tất đăng nhập để vào trang Chấm Công...")
+                ui_print("⏳ Đang chờ hoàn tất đăng nhập để vào hệ thống...")
                 try:
-                    page.wait_for_url(lambda u: "dang-nhap" not in u and "/quan-ly/cham-cong" in u, timeout=60000)
-                    ui_print(f"✅ Đã điều hướng vào trang: {page.url}")
+                    page.wait_for_url(lambda u: "dang-nhap" not in u and "/quan-ly" in u, timeout=45000)
+                    ui_print(f"✅ Đã đăng nhập thành công vào hệ thống: {page.url}")
                 except Exception as e_nav:
-                    logger.warning(f"Chưa tự động chuyển hướng: {e_nav}. Thử điều hướng trực tiếp...")
+                    logger.warning(f"Chưa tự động chuyển hướng: {e_nav}.")
+
+                # Đảm bảo điều hướng thẳng tới đúng trang Chấm Công
+                if "/quan-ly/cham-cong" not in page.url:
+                    ui_print(f"👉 Đang chuyển hướng tới trang Chấm Công: {CHAM_CONG_DIRECT_URL}")
                     page.goto(CHAM_CONG_DIRECT_URL, wait_until="networkidle")
 
             # Chờ thêm thời gian để Vue/React load dữ liệu trang Chấm Công

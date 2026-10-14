@@ -13,6 +13,7 @@ def test_xpath_syntax():
         LoginLocator.PASSWORD_INPUT,
         LoginLocator.LOGIN_SUBMIT_BUTTON,
         LoginLocator.GOOGLE_ACCOUNT_CHOOSER,
+        LoginLocator.GOOGLE_USE_ANOTHER_ACCOUNT_BTN,
         LoginLocator.get_google_account_xpath("huy.nguyenn@bado.vn"),
         LoginLocator.GOOGLE_EMAIL_INPUT,
         LoginLocator.GOOGLE_EMAIL_NEXT_BTN,

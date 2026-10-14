@@ -25,6 +25,12 @@ class LoginLocator:
     
     # Google OAuth Popup Locators (100% XPath thuần)
     GOOGLE_ACCOUNT_CHOOSER = "//div[@data-identifier or @data-email or contains(@class, 'account')]"
+    GOOGLE_USE_ANOTHER_ACCOUNT_BTN = (
+        "(//*[normalize-space()='Use another account' or normalize-space()='Sử dụng một tài khoản khác' or normalize-space()='Sử dụng tài khoản khác'] "
+        "| //*[@role='link' or @role='button' or self::li][contains(., 'Use another account') or contains(., 'Sử dụng một tài khoản khác') or contains(., 'Sử dụng tài khoản khác')] "
+        "| //*[contains(text(), 'Use another account') or contains(text(), 'Sử dụng một tài khoản khác') or contains(text(), 'Sử dụng tài khoản khác')] "
+        "| //*[(contains(., 'Use another account') or contains(., 'Sử dụng một tài khoản khác') or contains(., 'Sử dụng tài khoản khác')) and not(*[contains(., 'Use another account') or contains(., 'Sử dụng một tài khoản khác')])])[1]"
+    )
     GOOGLE_EMAIL_INPUT = "//input[@type='email' or @id='identifierId']"
     GOOGLE_EMAIL_NEXT_BTN = "(//*[@id='identifierNext']//button | //*[@id='identifierNext'] | //button[contains(., 'Tiếp theo') or contains(., 'Next')])[1]"
     GOOGLE_PASSWORD_INPUT = "//input[@type='password' or @name='Passwd' or @name='password']"
