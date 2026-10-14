@@ -1,29 +1,29 @@
 """
-Định nghĩa toàn bộ Locator CHỈ SỬ DỤNG MÃ XPATH theo đúng yêu cầu.
-Trích xuất và chuẩn hóa cho hệ thống BOM BADO (https://bom.bado.vn).
+Pure XPath Locators definition for BOM BADO timekeeping system (https://bom.bado.vn).
+All locators strictly use 100% pure XPath syntax.
 
-⚠️ CẢNH BÁO AN TOÀN:
-- TUYỆT ĐỐI KHÔNG CLICK VÀO NÚT CHẤM CÔNG TRONG LÚC TEST / LẤY LOCATOR.
+⚠️ SAFETY WARNING:
+- DO NOT CLICK TIMEKEEPING BUTTONS DURING TESTING / LOCATOR INSPECTION.
 """
 
 class LoginLocator:
-    """Các Locator dạng XPath trên trang Đăng nhập"""
-    # Nút 'Đăng nhập với Google' (chọn nút hiển thị trên Desktop qua [last()])
+    """XPath locators for Login page and Google OAuth popup"""
+    # Google Login Button on Desktop view
     GOOGLE_LOGIN_BUTTON = "(//button[contains(., 'Đăng nhập với Google')])[last()]"
     
-    # Nút 'Đối tác đăng nhập'
+    # Partner Login Button
     PARTNER_LOGIN_BUTTON = "//button[contains(., 'Đối tác đăng nhập')]"
     
-    # Input 'Tài khoản'
+    # Username input field
     USERNAME_INPUT = "//input[@placeholder='Tài khoản']"
     
-    # Input 'Mật khẩu'
+    # Password input field
     PASSWORD_INPUT = "//input[@placeholder='Mật khẩu']"
     
-    # Nút bấm submit 'ĐĂNG NHẬP'
+    # Submit login button
     LOGIN_SUBMIT_BUTTON = "//button[contains(@class, 'admin-submit-btn-custom') or normalize-space()='ĐĂNG NHẬP']"
     
-    # Google OAuth Popup Locators (100% XPath thuần)
+    # Google OAuth Popup Locators (100% pure XPath)
     GOOGLE_ACCOUNT_CHOOSER = "//div[@data-identifier or @data-email or contains(@class, 'account')]"
     GOOGLE_USE_ANOTHER_ACCOUNT_BTN = (
         "(//*[normalize-space()='Use another account' or normalize-space()='Sử dụng một tài khoản khác' or normalize-space()='Sử dụng tài khoản khác'] "
@@ -38,7 +38,7 @@ class LoginLocator:
 
     @staticmethod
     def get_google_account_xpath(username: str) -> str:
-        """Trả về 100% cú pháp XPath để chọn đúng tài khoản trong danh sách Choose an account"""
+        """Returns pure XPath to select target account from Choose an account list"""
         return (
             f"(//li[contains(., '{username}')] "
             f"| //*[@role='link' and contains(., '{username}')] "
@@ -52,32 +52,31 @@ class LoginLocator:
         )
 
 
-
 class TimekeepingLocator:
-    """Các Locator dạng XPath trên trang Chấm Công"""
+    """XPath locators for Timekeeping page"""
     
-    # 1. NÚT CHẤM CÔNG RA (Mục tiêu 17h45 khi đang trong ca)
+    # 1. Check-out button (Target for 17:45 shift completion)
     CHECKOUT_BUTTON = "//button[contains(., 'Bắt đầu chấm công ra')]"
     CHECKOUT_BUTTON_SPAN = "//span[text()='Bắt đầu chấm công ra']/ancestor::button"
     
-    # 2. NÚT CHẤM CÔNG VÀO
+    # 2. Check-in button
     CHECKIN_BUTTON = "//button[contains(., 'Bắt đầu chấm công vào')]"
     CHECKIN_BUTTON_SPAN = "//span[text()='Bắt đầu chấm công vào']/ancestor::button"
     
-    # 3. CÁC TRẠNG THÁI CA LÀM VIỆC (Dạng XPath)
-    # Chưa đến giờ chấm công
+    # 3. Work Shift State indicators
+    # Shift upcoming / Not yet time
     BTN_UPCOMING = "//span[text()='Chưa đến giờ chấm công']/ancestor::div[1]"
     
-    # Đã hoàn thành ca làm việc
+    # Shift already completed
     BTN_COMPLETED = "//span[text()='Đã hoàn thành ca làm việc']/ancestor::div[1]"
     
-    # Chưa có ca làm việc
+    # No shift assigned
     BTN_NO_SHIFT = "//span[text()='Chưa có ca làm việc']/ancestor::div[1]"
     
-    # 4. KHUNG CA VÀ THỜI GIAN LÀM VIỆC (XPath)
+    # 4. Work shift cards
     SHIFT_CARD = "//div[contains(@class, 'rounded-[10px]') or contains(@class, 'rounded-[12px]')]"
     
-    # 5. MODAL VÀ NÚT XÁC NHẬN (XPath)
+    # 5. Confirmation modal and action buttons
     CONFIRM_MODAL = "//div[@role='dialog']"
     CONFIRM_BUTTON = "//button[contains(., 'Xác nhận') or contains(., 'Đồng ý')]"
     CANCEL_BUTTON = "//button[contains(., 'Hủy') or contains(., 'Đóng')]"

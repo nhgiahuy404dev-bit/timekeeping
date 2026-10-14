@@ -1,16 +1,16 @@
 """
-Test Flow tự động điều hướng đến đúng trang Chấm Công BOM BADO rồi dừng lại.
-🔒 NGUYÊN TẮC AN TOÀN:
-- Flow chạy tới đúng trang https://bom.bado.vn/quan-ly/cham-cong.
-- Kiểm tra URL và xác thực sự hiện diện của các phần tử XPath trên trang.
-- DỪNG LẠI TẠI ĐÂY - TUYỆT ĐỐI KHÔNG CLICK VÀO NÚT CHẤM CÔNG!
+Automated Test Flow: Navigates to BOM BADO Timekeeping page and stops safely.
+🔒 ABSOLUTE SAFETY LOCK:
+- Navigates directly to https://bom.bado.vn/quan-ly/cham-cong.
+- Validates URL and confirms presence of XPath locators on the page.
+- STOPS HERE - NEVER CLICKS ANY TIMEKEEPING BUTTON!
 """
 import os
 import sys
 import logging
 from playwright.sync_api import sync_playwright
 
-# Đảm bảo import từ thư mục gốc
+# Ensure imports from repository root
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from url.timekeeping_page import CHAM_CONG_DIRECT_URL, CHROME_PATH
@@ -18,13 +18,17 @@ from data import LOGIN_ACCOUNT, PASSWORD
 from model.locator.timekeeping_locator import LoginLocator
 from model.page.timekeeping_page import TimekeepingPage
 
-# Cấu hình logging: Ghi toàn bộ dữ liệu chi tiết vào file debug.log
-# Mặc định KHÔNG in định dạng debug.log ra terminal để màn hình sạch đẹp
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+# Configure logging: write all technical details to debug.log
 LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "debug.log")
-# mode="w" đảm bảo xóa sạch log cũ của lần chạy trước, luôn bắt đầu với file log mới
 handlers = [logging.FileHandler(LOG_FILE, mode="w", encoding="utf-8")]
 
-# Chỉ bật StreamHandler nếu người dùng truyền cờ --show-log hoặc --verbose
 if "--show-log" in sys.argv or "--verbose" in sys.argv:
     handlers.append(logging.StreamHandler(sys.stdout))
 
@@ -36,17 +40,22 @@ logging.basicConfig(
 logger = logging.getLogger("TestTimekeepingFlow")
 
 def ui_print(msg: str):
-    """In thông báo ngắn gọn, trực quan trên terminal (không có timestamp/logger format)"""
-    print(msg, flush=True)
+    """Outputs clear user-facing messages to terminal and records full detail to debug.log"""
+    try:
+        print(msg, flush=True)
+    except Exception:
+        try:
+            print(msg.encode("ascii", errors="replace").decode("ascii"), flush=True)
+        except Exception:
+            pass
     logger.info(f"[UI] {msg}")
 
-# Bắt toàn bộ lỗi chưa xử lý và tự động ghi vào debug.log
 def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
-    logger.error("🚨 LỖI HỆ THỐNG / EXCEPTION XẢY RA:", exc_info=(exc_type, exc_value, exc_traceback))
-    ui_print(f"❌ Đã xảy ra lỗi: {exc_value}. Xem chi tiết trong file debug.log")
+    logger.error("🚨 UNHANDLED EXCEPTION IN TEST FLOW:", exc_info=(exc_type, exc_value, exc_traceback))
+    ui_print(f"❌ Error encountered: {exc_value}. Please check debug.log for details.")
 
 sys.excepthook = handle_unhandled_exception
 
@@ -54,22 +63,22 @@ AUTOMATION_PROFILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspat
 
 def test_flow_to_timekeeping_page():
     """
-    Kịch bản kiểm thử:
-    1. Khởi chạy trình duyệt (Headed mode để người dùng quan sát).
-    2. Điều hướng tới trang BOM BADO.
-    3. Hoàn tất đăng nhập nếu chưa có phiên.
-    4. Xác nhận chuyển hướng ĐÚNG vào trang: https://bom.bado.vn/quan-ly/cham-cong.
-    5. Kiểm tra và xác nhận các phần tử XPath trên trang chấm công.
-    6. Dừng lại an toàn - KHÔNG THỰC HIỆN BẤT KỲ LỆNH BẤM CHẤM CÔNG NÀO!
+    Test scenario:
+    1. Launch browser (Headed mode for visual observation).
+    2. Navigate to BOM BADO timekeeping page.
+    3. Complete Google login if no active session exists.
+    4. Verify redirection to: https://bom.bado.vn/quan-ly/cham-cong.
+    5. Inspect and validate XPath elements on the timekeeping page.
+    6. Stop safely - NO BUTTON CLICKS PERFORMED!
     """
     ui_print("=" * 65)
-    ui_print("🚀 BẮT ĐẦU TEST FLOW: ĐIỀU HƯỚNG TỚI TRANG CHẤM CÔNG RỒI DỪNG")
-    ui_print("🔒 KHÓA AN TOÀN: TUYỆT ĐỐI KHÔNG BẤM NÚT CHẤM CÔNG")
+    ui_print("🚀 STARTING TEST FLOW: NAVIGATE TO TIMEKEEPING PAGE & STOP")
+    ui_print("🔒 SAFETY LOCK: ZERO CLICKS ON TIMEKEEPING BUTTONS")
     ui_print("=" * 65)
 
     try:
         with sync_playwright() as p:
-            # Sử dụng Google Chrome với profile lưu session và tắt cờ automation
+            # Launch Chrome with persistent session and disabled automation flags
             context = p.chromium.launch_persistent_context(
                 user_data_dir=AUTOMATION_PROFILE,
                 executable_path=CHROME_PATH,
@@ -85,66 +94,65 @@ def test_flow_to_timekeeping_page():
             page = context.pages[0] if context.pages else context.new_page()
             timekeeping_page = TimekeepingPage(page)
 
-            # Bước 1: Mở URL chấm công
-            ui_print(f"👉 [1/4] Đang mở URL hệ thống: {CHAM_CONG_DIRECT_URL}")
+            # Step 1: Open timekeeping URL
+            ui_print(f"👉 [1/4] Navigating to URL: {CHAM_CONG_DIRECT_URL}")
             page.goto(CHAM_CONG_DIRECT_URL, wait_until="networkidle")
             page.wait_for_timeout(2000)
 
-            # Bước 2: Kiểm tra nếu ĐÃ Ở ĐÚNG TRANG CHẤM CÔNG rồi thì KHỎI ĐĂNG NHẬP
+            # Step 2: Check if already authenticated
             if timekeeping_page.is_already_logged_in():
-                ui_print("🎉 [2/4] ĐÃ Ở ĐÚNG TRANG CHẤM CÔNG (đã có phiên) -> KHỎI CẦN ĐĂNG NHẬP!")
+                ui_print("🎉 [2/4] Active session detected -> Skipping login!")
             else:
-                ui_print("🔑 [2/4] Hệ thống yêu cầu đăng nhập. Đang xử lý đăng nhập Google...")
+                ui_print("🔑 [2/4] Authentication required. Processing Google sign-in...")
                 timekeeping_page.login(LOGIN_ACCOUNT, PASSWORD, CHAM_CONG_DIRECT_URL)
 
-                ui_print("⏳ Đang chờ hoàn tất đăng nhập để vào hệ thống...")
+                ui_print("⏳ Waiting for authentication completion...")
                 try:
                     page.wait_for_url(lambda u: "dang-nhap" not in u and "/quan-ly" in u, timeout=45000)
-                    ui_print(f"✅ Đã đăng nhập thành công vào hệ thống: {page.url}")
+                    ui_print(f"✅ Successfully signed in: {page.url}")
                 except Exception as e_nav:
-                    logger.warning(f"Chưa tự động chuyển hướng: {e_nav}.")
+                    logger.warning(f"Waiting for redirect notice: {e_nav}.")
 
-                # Đảm bảo điều hướng thẳng tới đúng trang Chấm Công
+                # Ensure navigation directly to Timekeeping page
                 if "/quan-ly/cham-cong" not in page.url:
-                    ui_print(f"👉 Đang chuyển hướng tới trang Chấm Công: {CHAM_CONG_DIRECT_URL}")
+                    ui_print(f"👉 Navigating directly to timekeeping page: {CHAM_CONG_DIRECT_URL}")
                     page.goto(CHAM_CONG_DIRECT_URL, wait_until="networkidle")
 
-            # Chờ thêm thời gian để Vue/React load dữ liệu trang Chấm Công
             page.wait_for_timeout(3000)
 
-            # Bước 3: Xác nhận đã vào ĐÚNG trang Chấm Công (loại bỏ trường hợp dang-nhap?returnUrl=...)
+            # Step 3: Validate current URL
             current_url = page.url
-            logger.info(f"Bước 3: Xác nhận URL: {current_url}")
+            logger.info(f"Step 3: URL validation: {current_url}")
             assert "dang-nhap" not in current_url and "/quan-ly/cham-cong" in current_url, (
-                f"🚨 LỖI: Chưa vào đúng trang chấm công! URL hiện tại: {current_url}. "
-                f"Vui lòng hoàn tất xác thực đăng nhập trên trình duyệt."
+                f"🚨 ERROR: Not on timekeeping page! Current URL: {current_url}. "
+                f"Please ensure authentication completed in browser."
             )
-            ui_print("✅ [3/4] Xác nhận: ĐÃ VÀO ĐÚNG TRANG CHẤM CÔNG!")
+            ui_print("✅ [3/4] Verified: Reached Timekeeping page successfully!")
 
-            # Bước 4: Quét các phần tử XPath trên trang chấm công
-            ui_print("🔍 [4/4] Đang quét Locator và trạng thái ca làm việc (Chế độ An Toàn)...")
+            # Step 4: Scan XPath elements on timekeeping page
+            ui_print("🔍 [4/4] Scanning XPath locators and work shift state (Safe Mode)...")
             locators_result = timekeeping_page.inspect_and_get_locators()
-            ui_print(f"📊 Trạng thái ca làm việc: {locators_result.get('status')}")
+            ui_print(f"📊 Work shift status: {locators_result.get('status')}")
 
-            # Bước 5: Chụp ảnh màn hình lưu bằng chứng tại đúng trang chấm công
+            # Step 5: Capture verification screenshot
             screenshot_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "flow_stop_at_cham_cong.png")
             page.screenshot(path=screenshot_path, full_page=True)
-            ui_print(f"📸 Đã chụp ảnh màn hình xác thực: {os.path.basename(screenshot_path)}")
+            ui_print(f"📸 Verification screenshot saved: {os.path.basename(screenshot_path)}")
 
-            # Bước 6: DỪNG LẠI TẠI TRANG CHẤM CÔNG
+            # Step 6: Safe Stop
             ui_print("=" * 65)
-            ui_print("🛑 ĐÃ ĐẾN ĐÚNG TRANG CHẤM CÔNG VÀ DỪNG LẠI THEO YÊU CẦU.")
-            ui_print("🔒 XÁC NHẬN AN TOÀN 100%: Nút chấm công KHÔNG HỀ BỊ CLICK!")
-            ui_print("👀 Giữ màn hình mở trong 10 giây để quan sát trước khi kết thúc...")
+            ui_print("🛑 REACHED TIMEKEEPING PAGE AND STOPPED AS INTENDED.")
+            ui_print("🔒 100% SAFETY CONFIRMATION: Timekeeping button was NOT clicked!")
+            ui_print("👀 Keeping window open for 10 seconds for visual confirmation...")
             ui_print("=" * 65)
             page.wait_for_timeout(10000)
 
             context.close()
-            ui_print("✅ KẾT THÚC TEST FLOW THÀNH CÔNG.")
-            ui_print("📝 Toàn bộ log kỹ thuật chi tiết đã được lưu trong file: debug.log")
+            ui_print("✅ TEST FLOW COMPLETED SUCCESSFULLY.")
+            ui_print("📝 Full technical logs recorded in: debug.log")
     except Exception as e:
-        logger.error(f"❌ LỖI TRONG QUÁ TRÌNH THỰC THI TEST FLOW: {e}", exc_info=True)
-        ui_print(f"❌ Đã xảy ra lỗi: {e}. Vui lòng kiểm tra file debug.log")
+        logger.error(f"❌ Error during test flow execution: {e}", exc_info=True)
+        ui_print(f"❌ Error encountered: {e}. Check debug.log for full details.")
         raise
 
 if __name__ == "__main__":

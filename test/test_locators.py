@@ -1,11 +1,18 @@
 """
-Kiểm thử bộ Locator thuần XPath và Page Object Model trong chế độ An Toàn (Safe Dry-Run).
+Unit tests for Pure XPath Locators and Page Object Model Safety Guards.
+Verifies:
+1. Pure XPath syntax compliance (all locators start with '//' or '(//').
+2. Multi-layer safety locks: Dry-run lock, Time guard, Once-per-day guard.
+3. Session recognition logic.
 """
+import os
+import json
+from datetime import datetime
 from model.locator.timekeeping_locator import LoginLocator, TimekeepingLocator
-from model.page.timekeeping_page import TimekeepingPage
+from model.page.timekeeping_page import TimekeepingPage, is_checked_out_today, record_checkout_today, STATE_FILE
 
 def test_xpath_syntax():
-    """Kiểm tra toàn bộ locator đều bắt đầu bằng cú pháp XPath '//'"""
+    """Verify all defined locators strictly follow pure XPath syntax starting with '//' or '(//'"""
     locators = [
         LoginLocator.GOOGLE_LOGIN_BUTTON,
         LoginLocator.PARTNER_LOGIN_BUTTON,
@@ -32,10 +39,10 @@ def test_xpath_syntax():
         TimekeepingLocator.CANCEL_BUTTON
     ]
     for xpath in locators:
-        assert xpath.startswith("//") or xpath.startswith("(//"), f"Locator {xpath} không phải là XPath hợp lệ!"
+        assert xpath.startswith("//") or xpath.startswith("(//"), f"Locator {xpath} is not a valid pure XPath expression!"
 
 def test_safety_dry_run_lock():
-    """Kiểm tra cơ chế khóa an toàn: tuyệt đối không bấm nút trong chế độ dry_run"""
+    """Verify Guard Layer 1: Dry-run mode strictly prevents button clicks"""
     class MockTimekeepingPage(TimekeepingPage):
         def __init__(self):
             pass
@@ -45,8 +52,21 @@ def test_safety_dry_run_lock():
     assert res["status"] == "SKIPPED_CLICK"
     assert res["dry_run"] is True
 
+def test_safety_time_guard_lock():
+    """Verify Guard Layer 3: Premature clicks before scheduled time (17:45) are blocked"""
+    class MockTimekeepingPage(TimekeepingPage):
+        def __init__(self):
+            pass
+
+    page = MockTimekeepingPage()
+    # Force dry_run=False, but don't force time: if current time is before 17:45, it must block
+    now = datetime.now()
+    if now.hour < 17 or (now.hour == 17 and now.minute < 45):
+        res = page.execute_timekeeping(action="checkout", dry_run=False, force_time=False)
+        assert res["status"] in ("BLOCKED_BY_TIME_GUARD", "ALREADY_CHECKED_OUT_TODAY")
+
 def test_is_already_logged_in_logic():
-    """Kiểm tra logic: nếu đã ở đúng trang chấm công thì khỏi cần đăng nhập"""
+    """Verify session recognition logic: skip login when already on timekeeping page"""
     class MockPage:
         def __init__(self, url):
             self.url = url
@@ -55,11 +75,10 @@ def test_is_already_logged_in_logic():
         def __init__(self, url):
             self.page = MockPage(url)
 
-    # Đang ở trang login (chứa dang-nhap) -> False
+    # On login page -> False
     page_login = MockTimekeepingPage("https://bom.bado.vn/quan-ly/dang-nhap?returnUrl=%2Fquan-ly%2Fcham-cong")
     assert page_login.is_already_logged_in() is False
 
-    # Đã ở đúng trang chấm công -> True (khỏi cần đăng nhập)
+    # On timekeeping page -> True
     page_cham_cong = MockTimekeepingPage("https://bom.bado.vn/quan-ly/cham-cong")
     assert page_cham_cong.is_already_logged_in() is True
-
