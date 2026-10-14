@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Playwright & Chrome Automation User Profile
+automation_profile/
+
+# Logs & Temporary outputs
+debug.log
+*.log
+
+# Screenshots & Visual evidence
+*.png
+
+# IDEs & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
