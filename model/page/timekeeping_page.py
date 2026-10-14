@@ -70,12 +70,14 @@ class TimekeepingPage(BasePage):
                 popup = popup_info.value
                 logger.info("Cửa sổ Google popup đã mở.")
 
-                # Chờ popup chuyển hướng từ Firebase sang Google Accounts
+                # Chờ popup chuyển hướng từ Firebase sang Google Accounts (phải là accounts.google.com)
                 try:
-                    popup.wait_for_url(lambda u: "google.com" in u, timeout=15000)
-                    logger.info(f"Popup đã tải trang Google: {popup.url}")
-                except Exception:
-                    pass
+                    if "accounts.google.com" not in popup.url:
+                        popup.wait_for_url(lambda u: "accounts.google.com" in u, timeout=20000)
+                    logger.info(f"Popup đã tải trang Google Accounts: {popup.url}")
+                except Exception as e_url:
+                    logger.warning(f"Chờ accounts.google.com: {e_url}")
+
                 popup.wait_for_load_state("domcontentloaded")
                 popup.wait_for_timeout(1500)
 
@@ -83,21 +85,28 @@ class TimekeepingPage(BasePage):
                 account_xpath = LoginLocator.get_google_account_xpath(username)
                 account_el = popup.locator(account_xpath).first
                 account_selected = False
-                if account_el.is_visible(timeout=8000):
+                try:
+                    account_el.wait_for(state="visible", timeout=8000)
                     logger.info(f"Phát hiện tài khoản {username} trong danh sách Choose an account. Đang click chọn...")
+                    account_el.scroll_into_view_if_needed()
                     try:
-                        account_el.click()
+                        account_el.click(timeout=3000)
                     except Exception:
                         account_el.click(force=True)
                     account_selected = True
+                    logger.info(f"Đã click chọn tài khoản {username}.")
                     popup.wait_for_timeout(2000)
-                else:
-                    logger.info("Không thấy tài khoản trong danh sách Choose an account, kiểm tra ô nhập Email...")
+                except Exception:
+                    logger.info("Không phát hiện tài khoản trong Choose an account, kiểm tra ô nhập Email...")
 
-                # Bước 2: Nếu chưa chọn tài khoản từ danh sách, kiểm tra ô nhập Email
-                if not account_selected:
+                # Nếu sau khi click chọn tài khoản mà popup đã tự đóng (do đã có phiên sẵn không cần mật khẩu)
+                if popup.is_closed():
+                    logger.info("✅ Cửa sổ Google popup đã tự động đóng sau khi chọn tài khoản (đăng nhập thành công)!")
+
+                # Bước 2: Nếu chưa chọn tài khoản từ danh sách và popup vẫn mở, kiểm tra ô nhập Email
+                if not account_selected and not popup.is_closed():
                     email_input = popup.locator(LoginLocator.GOOGLE_EMAIL_INPUT).first
-                    if email_input.is_visible(timeout=4000):
+                    if email_input.is_visible(timeout=3000):
                         logger.info(f"Điền email: {username}")
                         email_input.fill(username)
                         popup.wait_for_timeout(500)
@@ -111,32 +120,34 @@ class TimekeepingPage(BasePage):
                             except Exception:
                                 pass
 
-                # Bước 3: Áp dụng cho cả 2 trường hợp (tài khoản 'Signed out' cần mật khẩu hoặc sau khi điền email)
-                pass_input = popup.locator(LoginLocator.GOOGLE_PASSWORD_INPUT).first
-                try:
-                    pass_input.wait_for(state="visible", timeout=12000)
-                    logger.info("Phát hiện ô nhập mật khẩu Google. Đang điền mật khẩu...")
-                    pass_input.fill(password)
-                    popup.wait_for_timeout(500)
-                    pass_input.press("Enter")
-                    popup.wait_for_timeout(1500)
+                # Bước 3: Áp dụng khi Google yêu cầu Mật khẩu (tài khoản Signed out hoặc sau khi điền email)
+                if not popup.is_closed():
+                    pass_input = popup.locator(LoginLocator.GOOGLE_PASSWORD_INPUT).first
+                    try:
+                        if pass_input.is_visible(timeout=4000):
+                            logger.info("Phát hiện ô nhập mật khẩu Google. Đang điền mật khẩu...")
+                            pass_input.fill(password)
+                            popup.wait_for_timeout(500)
+                            pass_input.press("Enter")
+                            popup.wait_for_timeout(1500)
 
-                    pass_next_btn = popup.locator(LoginLocator.GOOGLE_PASSWORD_NEXT_BTN).first
-                    if pass_next_btn.is_visible(timeout=1500):
-                        try:
-                            pass_next_btn.click()
-                        except Exception:
-                            pass
-                except Exception:
-                    logger.info("Không yêu cầu nhập mật khẩu (tài khoản đã đăng nhập sẵn hoặc đã tự động chuyển tiếp).")
+                            pass_next_btn = popup.locator(LoginLocator.GOOGLE_PASSWORD_NEXT_BTN).first
+                            if pass_next_btn.is_visible(timeout=1500):
+                                try:
+                                    pass_next_btn.click()
+                                except Exception:
+                                    pass
+                    except Exception:
+                        pass
 
-                # Chờ popup Google đóng sau khi hoàn tất xác thực (hoặc sau khi người dùng phê duyệt 2FA nếu có)
-                logger.info("⏳ Chờ hoàn tất đăng nhập Google (nếu có xác thực 2 bước 2FA trên điện thoại, hãy duyệt trên máy)...")
-                try:
-                    popup.wait_for_event("close", timeout=45000)
-                    logger.info("✅ Cửa sổ Google popup đã đóng thành công.")
-                except Exception:
-                    logger.info("Popup chưa đóng hoặc đã hoàn tất xử lý. Tiếp tục kiểm tra trang chính...")
+                # Bước 4: Chờ popup Google đóng nếu vẫn còn mở
+                if not popup.is_closed():
+                    logger.info("⏳ Chờ hoàn tất đăng nhập Google (nếu có xác thực 2 bước 2FA trên điện thoại, hãy duyệt trên máy)...")
+                    try:
+                        popup.wait_for_event("close", timeout=45000)
+                        logger.info("✅ Cửa sổ Google popup đã đóng thành công.")
+                    except Exception:
+                        logger.info("Popup chưa đóng hoặc đã hoàn tất xử lý. Tiếp tục kiểm tra trang chính...")
 
                 # Chờ trang chính chuyển hướng khỏi trang đăng nhập
                 try:
